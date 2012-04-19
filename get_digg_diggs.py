@@ -23,7 +23,7 @@ from datetime import datetime
 # Main Driver Code which inputs the topics/Category to fetch the news links.
 try:    
     # connection variable to connect to the Mysql Database
-    conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "", db = "digg_newdatabase" , connect_timeout =300)
+    conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "", db = "DiggTimeSeriesCollector" , connect_timeout =300)
     
 except MySQLdb.Error, e:
     print "Error %d: %s\n" % (e.args[0], e.args[1])
