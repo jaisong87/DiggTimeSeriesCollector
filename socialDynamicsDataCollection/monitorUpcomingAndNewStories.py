@@ -25,7 +25,7 @@ def getUpcomingNewsUrl(limit, topic):
         return "%s%s" % (baseUrl, urlParams)
 
 def getSocialDynamics(digg_id, date_created):
-	result = { 'digg_id' :digg_id, 'date_created':date_created, 'tpc1':0,'tpc2':0,'tpc3':0,'tpc4':0,'tpc5':0, 'upc1':0,'upc2':0,'upc3':0,'upc4':0,'upc5':0 , 'uc':1}			
+	result = { 'digg_id' :digg_id, 'date_created':date_created, 'tpc1':0,'tpc2':0,'tpc3':0,'tpc4':0,'tpc5':0, 'upc1':0,'upc2':0,'upc3':0,'upc4':0,'upc5':0 , 'uc':0}			
 	res = (digg_id, date_created, 0,0,0,0,0,0,0,0,0,0,1)			
 	try:
 		db = MySQLdb.connect(user="root", passwd= "digg2012", db="Diggv2")
@@ -48,12 +48,15 @@ def getSocialDynamics(digg_id, date_created):
 				result['uc']=res[12]+1
 			return result
 		else:
-			query = "INSERT INTO socialdynamics(digg_id, digg_created) VALUES('%s', '%s')" % (digg_id, datetime.fromtimestamp(date_created))
-			#print query
-			conn.execute(query)
+			if int(date_created > (int(time.time())-60*310)):
+				query1 = "INSERT INTO socialdynamics(digg_id, digg_created) VALUES('%s', '%s')" % (digg_id, datetime.fromtimestamp(date_created))
+				#print query
+				conn.execute(query1)
+				query2 = "INSERT INTO diggs(digg_id, digg_created) VALUES('%s', '%s')" % (digg_id, datetime.fromtimestamp(date_created))
+				conn.execute(query2)
 		conn.close()
 	except Exception as error:
-		print "%s : databse query(%s) failed" % (str(datetime.now()),query), error
+		print "%s : databse query(%s);(%s) failed" % (str(datetime.now()),query1,query2), error
 	return result
 
 def updateSocialDynamics(story):
@@ -141,4 +144,5 @@ diggSections = [ "business", "entertainment", "gaming", "lifestyle", "offbeat", 
 print "%s : Updating the Tables from upcoming and top stories" % (str(datetime.now()))
 updateSectionFromUpcomingList( "", 300)
 for topic in diggSections:
-	updateSectionFromTopList(topic,50)	
+	updateSectionFromTopList(topic,50)
+	time.sleep(3)	
