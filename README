@@ -1,0 +1,12 @@
+socialDynamicsDataCollection/ folder contains a script called diggJob.sh using which you can poll
+and collect time-series data every few minutes. 
+
+Use Diggv2.sql to load the mysql schema to your database.
+
+Specify mysql user, passwd, database in the *.py files in socialDynamicsDataCollection/ so that the
+script can successfully dump data into your system.
+
+Put diggJob.sh to run and you start seeing  errorLogs and runLogs in the folder. Looking at the errorLog 
+you can figure out time intervals for which the script had problems
+
+
