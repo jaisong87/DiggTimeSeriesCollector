@@ -81,7 +81,7 @@ def updateSectionFromTopList(topic, limit):
 		jResult = json.loads(result)
 		storyCount = jResult['count']	
 	except Exception as error:
-		print " %s : urlFetch Failed : " % (str(datetime.now())), error
+		print " %s : urlFetct ( %s ) : " % (str(datetime.now()),request ), error
 	
 	if storyCount > 0:
 		for curStory in jResult['stories']:
@@ -104,6 +104,7 @@ def updateSectionFromTopList(topic, limit):
 				if dlt.seconds < 5*3600 :
 					story['tpc5'] = story['tpc5']+1
 				updateSocialDynamics(story)			
+				time.sleep(3)	
 
 
 def updateSectionFromUpcomingList(topic, limit):
@@ -139,10 +140,10 @@ def updateSectionFromUpcomingList(topic, limit):
 				if dlt.seconds < 5*3600 :
 					story['upc5'] = story['upc5']+1
 				updateSocialDynamics(story)			
+				time.sleep(3)	
 
 diggSections = [ "business", "entertainment", "gaming", "lifestyle", "offbeat", "politics", "science", "sports", "technology", "world_news" ]
 print "%s : Updating the Tables from upcoming and top stories" % (str(datetime.now()))
 updateSectionFromUpcomingList( "", 300)
 for topic in diggSections:
 	updateSectionFromTopList(topic,50)
-	time.sleep(3)	
