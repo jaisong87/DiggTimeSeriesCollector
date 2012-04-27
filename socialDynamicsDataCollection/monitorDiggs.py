@@ -17,7 +17,7 @@ def getCurrentDiggCount(digg_id):
                 diggs = jResult['stories'][0]['diggs']
 		return diggs
 	except Exception as error:
-		print "%s : %s Fetch failed!!!" % (str(datetime.now()),request), error 		
+		sys.stderr.write( "%s : %s Fetch failed!!! - %s" % (str(datetime.now()),request, error)) 		
 		return -1		
 
 def getRecentDiggs(hour):
@@ -31,7 +31,7 @@ def getRecentDiggs(hour):
 		conn.close()
 		return res
 	except Exception as error:
-		print "%s : databse query(%s) failed" % (str(datetime.now()),query), error	
+		sys.stderr.write( "%s : databse query(%s) failed - %s " % (str(datetime.now()),query, error))	
 
 def updateDiggsTable(story):
 	try:
@@ -42,7 +42,7 @@ def updateDiggsTable(story):
 		conn.execute(query)
 		conn.close()
 	except Exception as error:
-                print "%s : databse query(%s) failed" % (str(datetime.now()),query), error
+                sys.stderr.write("%s : databse query(%s) failed - %s" % (str(datetime.now()),query, error))
 
 
 print "%s : Updating the Tables with diggCounts" % (str(datetime.now()))
