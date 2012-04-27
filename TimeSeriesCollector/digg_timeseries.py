@@ -134,7 +134,7 @@ def get_News_Articles(offset):
                 #print datetime.fromtimestamp(date)
                 
                 # connection variable to connect to the Mysql Database
-                conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "", db = "digg_newdatabase")
+                conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "iltwat", db = "DiggTimeSeriesCollector")
             except MySQLdb.Error, e:
                 print "Error %d: %s\n" % (e.args[0], e.args[1])
                 
@@ -176,15 +176,4 @@ def get_News_Articles(offset):
 # Main Driver Code which inputs the topics/Category to fetch the news links.
 
 get_News_Articles(500)
-                             
-                             
-                             
-                             
-                             
-                             
-                             
-                             
-                             
-                             
-                             
                              

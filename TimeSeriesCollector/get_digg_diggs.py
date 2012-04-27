@@ -23,7 +23,7 @@ from datetime import datetime
 # Main Driver Code which inputs the topics/Category to fetch the news links.
 try:    
     # connection variable to connect to the Mysql Database
-    conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "", db = "DiggTimeSeriesCollector" , connect_timeout =300)
+    conn = MySQLdb.connect (host = "localhost",user = "root",passwd = "iltwat", db = "DiggTimeSeriesCollector" , connect_timeout =300)
     
 except MySQLdb.Error, e:
     print "Error %d: %s\n" % (e.args[0], e.args[1])
@@ -36,7 +36,7 @@ cursor.execute("SELECT digg_id FROM diggs_upcoming_stories")
 row = cursor.fetchall ()
 total_rows = cursor.rowcount
 print total_rows
-    
+   
 for i in range(1, total_rows):
         
     story_id = row[i][0]
@@ -66,7 +66,7 @@ for i in range(1, total_rows):
             time.sleep(1)
                 
             diggs = data['stories'][index]['diggs']
-            story_id = data['stories'][index]['story_id']
+            #story_id = data['stories'][index]['story_id']
             date_created = data['stories'][index]['date_created']
             comments = data['stories'][index]['comments']
                 
@@ -86,7 +86,8 @@ for i in range(1, total_rows):
                 time.sleep(1)
                 pass
 
-cursor2.close ()
+if(total_rows > 0 ): 
+	cursor2.close ()
 cursor.close()
 conn.commit()
 conn.close()
