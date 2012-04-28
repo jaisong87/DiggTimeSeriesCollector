@@ -19,6 +19,7 @@
 -- Table structure for table `diggs`
 --
 CREATE DATABASE Diggv2;
+USE Diggv2;
 
 DROP TABLE IF EXISTS `diggs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
