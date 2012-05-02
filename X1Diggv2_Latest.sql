@@ -19,6 +19,9 @@
 -- Table structure for table `diggFeatures`
 --
 
+CREATE DATABASE IF NOT EXISTS X1Diggv2;
+use X1Diggv2; 
+
 DROP TABLE IF EXISTS `diggFeatures`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
