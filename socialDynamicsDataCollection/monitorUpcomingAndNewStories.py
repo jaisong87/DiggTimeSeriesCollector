@@ -8,9 +8,11 @@ import datetime
 import time
 import json
 import MySQLdb
+import sys
 import csv
 from pprint import pprint
 from datetime import datetime
+timetoSleep=2 
 
 def getTopNewsUrl(limit, topic):
 	baseUrl = 'http://services.digg.com/2.0/story.getTopNews?'
@@ -28,7 +30,7 @@ def getSocialDynamics(digg_id, date_created):
 	result = { 'digg_id' :digg_id, 'date_created':date_created, 'tpc1':0,'tpc2':0,'tpc3':0,'tpc4':0,'tpc5':0, 'upc1':0,'upc2':0,'upc3':0,'upc4':0,'upc5':0 , 'uc':0}			
 	res = (digg_id, date_created, 0,0,0,0,0,0,0,0,0,0,1)			
 	try:
-		db = MySQLdb.connect(user="root", passwd= "digg2012", db="Diggv2")
+		db = MySQLdb.connect(user="root", passwd= "qaladima", db="Diggv2")
 		conn = db.cursor()	
 		query = "SELECT * FROM socialdynamics WHERE digg_id = '%s'" % (digg_id)
 		conn.execute(query)
@@ -61,7 +63,7 @@ def getSocialDynamics(digg_id, date_created):
 
 def updateSocialDynamics(story):
 	try:
-		db = MySQLdb.connect(user="root", passwd= "digg2012", db="Diggv2")
+		db = MySQLdb.connect(user="root", passwd= "qaladima", db="Diggv2")
                 conn = db.cursor()      
                 query = "UPDATE socialdynamics SET tpc1=%d,tpc2=%d,tpc3=%d,tpc4=%d,tpc5=%d,upc1=%d,upc2=%d,upc3=%d,upc4=%d,upc5=%d,uc=%d WHERE digg_id = '%s'" % (story['tpc1'], story['tpc2'], story['tpc3'], story['tpc4'], story['tpc5'], story['upc1'], story['upc2'], story['upc3'], story['upc4'], story['upc5'], story['uc'],story['digg_id'])
 		#print query
@@ -81,7 +83,11 @@ def updateSectionFromTopList(topic, limit):
 		jResult = json.loads(result)
 		storyCount = jResult['count']	
 	except Exception as error:
-		sys.stderr.write(" %s : urlFetch Failed - %s: " % (str(datetime.now()),error))
+		sys.stderr.write(" %s : urlFetch(%s) Failed - %s\n" % (str(datetime.now()),request,error))
+		global timetoSleep
+                timetoSleep*=2
+                time.sleep(timetoSleep)
+                sys.stderr.write( "%s : Sleeping for %d seconds\n" % ( str(datetime.now()), timetoSleep))
 	
 	if storyCount > 0:
 		for curStory in jResult['stories']:
@@ -104,7 +110,6 @@ def updateSectionFromTopList(topic, limit):
 				if dlt.seconds < 5*3600 :
 					story['tpc5'] = story['tpc5']+1
 				updateSocialDynamics(story)			
-				#time.sleep(3)	
 
 
 def updateSectionFromUpcomingList(topic, limit):
@@ -117,7 +122,11 @@ def updateSectionFromUpcomingList(topic, limit):
 		jResult = json.loads(result)
 		storyCount = jResult['count']	
 	except Exception as error:
-		sys.stderr.write(" %s : urlFetch Failed! - %s " % (str(datetime.now()), error))
+		sys.stderr.write(" %s : urlFetch(%s) Failed! - %s\n " % (str(datetime.now()), request,error))
+		global timetoSleep
+		timetoSleep*=2
+		time.sleep(timetoSleep)
+		sys.stderr.write( "%s : Sleeping for %d seconds\n" % ( str(datetime.now()),timetoSleep))
 
 	if(storyCount>0) :
 		for curStory in jResult['stories']:
@@ -140,7 +149,6 @@ def updateSectionFromUpcomingList(topic, limit):
 				if dlt.seconds < 5*3600 :
 					story['upc5'] = story['upc5']+1
 				updateSocialDynamics(story)			
-				#time.sleep(3)	
 
 diggSections = [ "business", "entertainment", "gaming", "lifestyle", "offbeat", "politics", "science", "sports", "technology", "world_news" ]
 print "%s : Updating the Tables from upcoming and top stories" % (str(datetime.now()))
