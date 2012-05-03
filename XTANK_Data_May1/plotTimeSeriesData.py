@@ -1,8 +1,9 @@
 import MySQLdb
+import dbInfo
 import matplotlib.pyplot as plt
 
 def plotDiggDistro(minDiggs = 2):
-	db = MySQLdb.connect(user = "root", passwd = "iltwat", db = "X1Diggv2")
+	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
         query = "SELECT diggs FROM diggFeatures WHERE diggs > %d" % (minDiggs)
         conn.execute(query)
@@ -20,9 +21,9 @@ def plotDiggDistro(minDiggs = 2):
 	plt.show()	
 	
 def getStories(minDiggs = 10):
-	db = MySQLdb.connect(user = "root", passwd = "iltwat", db = "X1Diggv2")
+	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
-        query = "SELECT digg_id FROM diggFeatures WHERE diggs > %d" % (minDiggs)
+        query = "SELECT digg_id FROM diggFeatures WHERE diggs >= %d" % (minDiggs)
         conn.execute(query)
         data = conn.fetchall()
         distro = []
@@ -32,7 +33,7 @@ def getStories(minDiggs = 10):
 
 
 def getParam(digg_id, param):
-	db = MySQLdb.connect(user = "root", passwd = "iltwat", db = "X1Diggv2")
+	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
 	table = "diggFeatures"
 	if(param == 'diggs' or param =="fofCount" or param =="authorDiggs" or param == "authorComments" or param == "authorFans" or param == "authorFollows" or param == "authorGender" or param == "authorSubmissions" ):
@@ -51,16 +52,19 @@ def getParam(digg_id, param):
 		return ans[0]
 	
 
-def plotSocialDynamicsData(dim, th1=71, th2=121):
+def plotSocialDynamicsData(dim, minDiggs=5, th1 = 10, th2=71, th3=121):
 	lt1 = th1
 	lt2 = th2
-	data = getStories()
+	lt3 = th3
+	data = getStories(minDiggs)
 	diggs1 = []
 	param1 = []
 	diggs2 = []
 	param2 = []
 	diggs3 = []
 	param3 = []
+	diggs4 = []
+	param4 = []
 	for row in data:
 		diggCount = getParam(row, "diggs")
 		#print "Calculating for ", row ," with ", diggCount , " diggs "
@@ -70,16 +74,20 @@ def plotSocialDynamicsData(dim, th1=71, th2=121):
 		elif(diggCount<lt2):
 			diggs2.append(diggCount)
 			param2.append(getParam(row, dim) )
-		else:
+		elif(diggCount<lt3):
 			diggs3.append(diggCount)
 			param3.append(getParam(row, dim) )
+		else:
+			diggs4.append(diggCount)
+			param4.append(getParam(row, dim) )
 	print len(diggs1), len(param1), len(diggs2), len(param2), len(diggs3), len(param3)
 	plt.xlabel(dim)
 	plt.ylabel("Diggs")
-	plt.title("Diggs vs %s green(<%d), blue(%d-%d), red(%d+" % (dim, lt1, lt1, lt2, lt2))
-	plt.plot(param1, diggs1, "go")
+	plt.title("Diggs vs %s green(<%d), blue(%d-%d), red(%d-%d) violet(%d+" % (dim, lt1, lt1, lt2, lt2, lt3, lt3))
+	plt.plot(param1, diggs1, "g-")
 	plt.plot(param2, diggs2, "bo")
-	plt.plot(param3, diggs3, "ro")
+	plt.plot(param3, diggs3, "r*")
+	plt.plot(param4, diggs4, "y+")
 	plt.show()
 	plt.hist(param1,100, color="green", cumulative =True)
 	plt.title("CDF of %s for diggs<%d" % (dim, lt1))
@@ -88,19 +96,23 @@ def plotSocialDynamicsData(dim, th1=71, th2=121):
 	plt.title("CDF of %s for diggs>%d AND diggs<%d" % (dim, lt1, lt2))
 	plt.show()
 	plt.hist(param3,100, color="red", cumulative =True)
-	plt.title("CDF of %s for diggs>%d" % (dim, lt2))
+	plt.title("CDF of %s for diggs>%d AND diggs<%d" % (dim, lt2, lt3))
+	plt.show()
+	plt.hist(param4,100, color="magenta", cumulative =True)
+	plt.title("CDF of %s for diggs>%d" % (dim, lt3))
 	plt.show()
 
-def makeClassificationSet(file, paraList, th1 =71, th2=121):
+def makeClassificationSet(file, minDiggs = 5, paraList = ['tpc1', 'tpc2', 'upc1', 'upc2', 'digg1', 'digg2', 'authorDiggs', 'authorComments', 'authorFans', 'authorFollows', 'authorSubmissions' ] , th1 = 11, th2 =71, th3=121):
 	lt1 = th1
 	lt2 = th2
-	data = getStories()
+	lt3 = th3
+	data = getStories(minDiggs)
 	fh = open(file, 'w')
 	fh.write("@RELATION Digg_SocialDynamicsBasedFeatures\n")
 	for para in paraList:
 		spec = "@ATTRIBUTE %s  NUMERIC\n" % (para)
 		fh.write(spec)
-	fh.write("@ATTRIBUTE class {A, B, C}\n")
+	fh.write("@ATTRIBUTE class {A, B, C, D}\n")
 	fh.write("@DATA\n")
 	for row in data:
 		diggCount = getParam(row, "diggs")
@@ -110,8 +122,10 @@ def makeClassificationSet(file, paraList, th1 =71, th2=121):
 			cl = 'A'
 		elif(diggCount<lt2):
 			cl='B'
-		else:
+		elif(diggCount<lt3):
 			cl='C'
+		else:
+			cl='D'
 		featureVector = []
 		line = ""
 		for para in paraList:
