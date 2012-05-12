@@ -1,3 +1,3 @@
 user = "root"
-passwd = ""
-db = "X1Diggv2"
+passwd = "iltwat"
+db = "allnewdiggdatabase"

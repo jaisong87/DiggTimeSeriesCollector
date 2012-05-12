@@ -1,21 +1,39 @@
 import MySQLdb
 import dbInfo
 import matplotlib.pyplot as plt
+import pdb
+import nltk
 
-def plotDiggDistro(minDiggs = 2):
+def plotDiggDistro(minDiggs = 2,  lt1 = 10, lt2=70, lt3=120, clSize = 200):
 	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
-        query = "SELECT diggs FROM diggFeatures WHERE diggs > %d" % (minDiggs)
-        conn.execute(query)
+        query = "SELECT diggs FROM diggfeatures WHERE diggs > %d" % (minDiggs)
+	conn.execute(query)
         data = conn.fetchall()
-	distro = []
+	conn.close()
+	distro1 = []
+	distro2 = []
+	distro3 = []
+	distro4 = []
 	for row in data:
-		distro.append(row[0])
-	plt.hist(distro, 100, color='g')
+		if row[0]<lt1 and len(distro1)<clSize:
+			distro1.append(row[0])
+		elif row[0]>(lt1+10) and row[0]<lt2 and len(distro2)<clSize:
+			distro2.append(row[0])
+		elif row[0]>(lt2+20) and row[0]<lt3 and len(distro3)<clSize:
+			distro3.append(row[0])
+		elif row[0]>lt3+20 and len(distro4)<clSize:
+			distro4.append(row[0])
+	print len(distro1), len(distro2), len(distro3), len(distro4)
+	plt.hist(distro1, 10, color='r')
+	plt.hist(distro2, 10, color='g')
+	plt.hist(distro3, 10, color='b')
+	plt.hist(distro4, 10, color='y')
+        query = "4-way classification [%d-%d(%d)], [%d-%d(%d)], [%d-%d(%d)], [%d-INF(%d)] " %(minDiggs, lt1, len(distro1), lt1+10, lt2, len(distro2), lt2+20, lt3, len(distro3), lt3+20, len(distro4))
 	plt.title(query)
 	plt.grid(True)
 	plt.show()	
-	plt.hist(distro, 100, color='r', cumulative = True)
+	plt.hist(distro1, 100, color='r', cumulative = True)
 	plt.grid(True)
 	plt.title("%s (CDF) " % (query) )
 	plt.show()	
@@ -23,7 +41,7 @@ def plotDiggDistro(minDiggs = 2):
 def getStories(minDiggs = 10):
 	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
-        query = "SELECT digg_id FROM diggFeatures WHERE diggs >= %d" % (minDiggs)
+        query = "SELECT digg_id FROM diggfeatures WHERE diggs >= %d" % (minDiggs)
         conn.execute(query)
         data = conn.fetchall()
         distro = []
@@ -35,9 +53,11 @@ def getStories(minDiggs = 10):
 def getParam(digg_id, param):
 	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
-	table = "diggFeatures"
-	if(param == 'diggs' or param =="fofCount" or param =="authorDiggs" or param == "authorComments" or param == "authorFans" or param == "authorFollows" or param == "authorGender" or param == "authorSubmissions" ):
-		table = "diggFeatures"
+	table = "diggfeatures"
+	if param == 'google_pagerank' :
+		table = 'diggs_storyinfo'
+	elif(param == 'diggs' or param =="fofCount" or param =="authorDiggs" or param == "authorComments" or param == "authorFans" or param == "authorFollows" or param == "authorGender" or param == "authorSubmissions" ):
+		table = "diggfeatures"
 	elif (param == 'digg1' or param == 'digg2' or param == 'digg3' or param == 'digg4' or param == 'digg5'):
 		table = "diggs"
 	else:
@@ -102,43 +122,112 @@ def plotSocialDynamicsData(dim, minDiggs=5, th1 = 10, th2=71, th3=121):
 	plt.title("CDF of %s for diggs>%d" % (dim, lt3))
 	plt.show()
 
-def makeClassificationSet(file, minDiggs = 5, paraList = ['tpc1', 'tpc2', 'upc1', 'upc2', 'digg1', 'digg2', 'authorDiggs', 'authorComments', 'authorFans', 'authorFollows', 'authorSubmissions' ] , th1 = 11, th2 =71, th3=121):
+def loadngram(ngram, Ngramfile):
+  fp = open(Ngramfile, 'r')
+  for i in fp:
+    ngram.append(i.strip())
+  fp.close()
+
+def fillist(diggid, newlist, ngramlist, ngramsize):
+  try:
+    fp = open("Comments/" + diggid.replace(':','$'), 'r')
+  except IOError:
+    return
+  for i in fp:
+    for gram in range(1,ngramsize):
+      for j in nltk.ngrams(i.split(), gram):
+        if str(j) in ngramlist:
+          index = ngramlist.index(str(j))
+          newlist[index] += 1
+
+def fillistpos(diggid, newlist, posngramlist, ngramsize):
+  try:
+    fp = open("Comments/" + diggid.replace(':','$'), 'r')
+  except IOError:
+    return
+  for line in fp:
+    i = [k[1] for k in nltk.pos_tag(line.split())] 
+    for gram in range(1,ngramsize):
+      for j in nltk.ngrams(i, gram):
+        if str(j) in posngramlist:
+          index = posngramlist.index(str(j))
+          newlist[index] += 1
+
+def makeClassificationSet(file, minDiggs = 2, clSize = 200 , paraList = ['tpc1', 'tpc2', 'upc1', 'upc2', 'digg1', 'digg2', 'authorDiggs', 'authorComments', 'authorFans', 'authorFollows', 'authorSubmissions', 'ngramComments', 'posngramComments', 'google_pagerank' ] , th1 = 11, th2 =71, th3=121, Ngramfile = "Comments/Ngramfeatures", POSNgramfile= "Comments/POSNgramfeatures", ngramsize = 5):
 	lt1 = th1
 	lt2 = th2
 	lt3 = th3
+	clA = 0
+	clB = 0
+	clC = 0
+	clD = 0
+	curClSz = clSize+1
+        ngramlist = []
+        posngramlist = []
+        loadngram(ngramlist, Ngramfile)
+        loadngram(posngramlist, POSNgramfile)
 	data = getStories(minDiggs)
-	fh = open(file, 'w')
+        fh = open(file, 'w')
 	fh.write("@RELATION Digg_SocialDynamicsBasedFeatures\n")
 	for para in paraList:
-		spec = "@ATTRIBUTE %s  NUMERIC\n" % (para)
-		fh.write(spec)
+                if para == "ngramComments" or para == "posngramComments":
+                  if para == "ngramComments":
+                    for i  in range(0,len(ngramlist)):
+                      spec = "@ATTRIBUTE Ngram%s  NUMERIC\n" %i
+                      fh.write(spec)
+                  else:
+                    for i in range(0,len(posngramlist)): 
+                      spec = "@ATTRIBUTE POSNgram%s  NUMERIC\n" % i
+                      fh.write(spec)
+                else:
+		  spec = "@ATTRIBUTE %s  NUMERIC\n" % (para)
+		  fh.write(spec)
 	fh.write("@ATTRIBUTE class {A, B, C, D}\n")
 	fh.write("@DATA\n")
 	for row in data:
 		diggCount = getParam(row, "diggs")
 		noiseChance = 0
-		cl = 'A'
+		cl = '-'
+		curClSz = clSize+1
 		if(diggCount<lt1):
 			cl = 'A'
-		elif(diggCount<lt2):
+			clA +=1
+			curClSz = clA
+		elif diggCount<lt2 and diggCount>(lt1+10):
 			cl='B'
-		elif(diggCount<lt3):
+			clB +=1
+			curClSz = clB
+		elif diggCount<lt3 and diggCount>(lt2+20):
 			cl='C'
-		else:
+			clC +=1
+			curClSz = clC
+		elif diggCount>lt3+20:
 			cl='D'
+			clD +=1
+			curClSz = clD
 		featureVector = []
 		line = ""
 		for para in paraList:
-			fval = getParam(row, para)
-			if row=='upc1' and para==0:
+                        if "ngram" in para:
+                          if para == "ngramComments":
+ 			    newlist = [0]*len(ngramlist)
+                            fillist(row, newlist, ngramlist, ngramsize)
+                          else:
+                            newlist = [0]*len(posngramlist)
+                            fillistpos(row, newlist, posngramlist, ngramsize)
+                          for i1 in newlist:
+                            line += str(i1) + ','
+                        else:   
+			  fval = getParam(row, para)
+			  if row=='upc1' and para==0:
 				noiseChance = noiseChance +2
-			elif row =='upc2' and para==0:
+			  elif row =='upc2' and para==0:
 				noiseChance = noiseChance +1
-			featureVector.append(fval)
-			line += "%d," % (fval)
+			  featureVector.append(fval)
+			  line += "%d," % (fval)
 		line += "%s\n" % (cl)
 		
-		if noiseChance < 2:
+		if noiseChance < 2 and curClSz<=clSize:
 			fh.write(line)
 	fh.close()
 
@@ -164,3 +253,5 @@ def makeRegressionSet(file, paraList, th1 =71, th2=121):
 		line += "%d\n" % (diggCount)
 		fh.write(line)
 	fh.close()
+
+
