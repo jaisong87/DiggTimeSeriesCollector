@@ -54,7 +54,7 @@ def getParam(digg_id, param):
 	db = MySQLdb.connect(user = dbInfo.user, passwd = dbInfo.passwd, db = dbInfo.db)
         conn = db.cursor()
 	table = "diggfeatures"
-	if param == 'google_pagerank' :
+	if param == 'google_pagerank' or param =='title' or param == 'description':
 		table = 'diggs_storyinfo'
 	elif(param == 'diggs' or param =="fofCount" or param =="authorDiggs" or param == "authorComments" or param == "authorFans" or param == "authorFollows" or param == "authorGender" or param == "authorSubmissions" ):
 		table = "diggfeatures"
