@@ -21,7 +21,7 @@ def getCurrentDiggCount(digg_id):
 
 def updateDiggTable(digg_id, fh):
 	try:
-		db = MySQLdb.connect(user="root", passwd = "iltwat", db = "X1Diggv2")
+		db = MySQLdb.connect(user="root", passwd = "", db = "X1Diggv2")
 		conn = db.cursor()
 		queryP = "SELECT * FROM diggFeatures WHERE digg_id = '%s'" % (digg_id)
 		conn.execute(queryP)
@@ -43,7 +43,7 @@ def updateDiggTable(digg_id, fh):
 		
 def getStories():
 	try:
-		db = MySQLdb.connect(user="root", passwd = "iltwat", db = "X1Diggv2")
+		db = MySQLdb.connect(user="root", passwd = "", db = "X1Diggv2")
                 conn = db.cursor()
                 query = "SELECT digg_id FROM diggs WHERE digg_created < '2012-04-30 02:10:00' AND digg5>2"
                 conn.execute(query)
